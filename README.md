@@ -9,8 +9,8 @@ Add dependencies
 basex-rs = { git = "https://github.com/zTgx/basex-rs.git" }
 ```
 
-```
-//encode
+```rust
+//decode
 extern crate basex_rs;
 use basex_rs::BaseX;
 
@@ -19,8 +19,8 @@ let decoded = BaseX::decode(src);
 assert_eq!(decoded, Some(vec![0, 130, 189, 40]));
 ```
 
-```
-//decode
+```rust
+//encode
 extern crate basex_rs;
 use basex_rs::BaseX;
 
