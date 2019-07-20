@@ -1,4 +1,4 @@
-# basex-rs
+# [basex-rs](https://github.com/zTgx/basex-rs.git)
 
 Base58 implement in [Rust](http://www.rust-lang.org).
 
