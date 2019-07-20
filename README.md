@@ -1,4 +1,4 @@
-# [basex-rs](https://github.com/zTgx/basex-rs.git)  [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+# [basex-rs](https://github.com/zTgx/basex-rs.git)  [![Build Status](https://travis-ci.org/zTgx/basex-rs.svg?branch=master)](https://travis-ci.org/zTgx/basex-rs) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 Base58 implement in [Rust](http://www.rust-lang.org).
 
