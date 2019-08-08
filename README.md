@@ -6,7 +6,7 @@ Base58 implement in [Rust](http://www.rust-lang.org).
 Add dependencies
 ```
 [dependencies]
-basex-rs = { git = "https://github.com/zTgx/basex-rs.git" }
+basex-rs = "0.1.0"
 ```
 
 ```rust
