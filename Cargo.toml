@@ -3,5 +3,12 @@ name = "basex-rs"
 version = "0.1.0"
 authors = ["zTgx <747674262@qq.com>"]
 edition = "2018"
+readme = "README.md"
+keywords = [ "base58" ]
+categories = [ "blockchain" ]
+license = "MIT/Apache-2.0"
+exclude = [ "/.travis.yml" ]
+description = "Base58 implementation."
+repository = "https://github.com/zTgx/basex-rs.git"
 
 [dependencies]
