@@ -1,21 +1,30 @@
-
-
-use std::collections::HashMap;
-
-static ALPHABET: &[u8; 62] = b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-static BITCOIN:  &[u8; 58] = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-static RIPPLE:   &[u8; 58] = b"rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz";
-static FLICKR:   &[u8; 58] = b"123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";
-static SKYWELL:  &[u8; 58] = b"jpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65rkm8oFqi1tuvAxyz";
+// pub const ALPHABET: &[u8; 62] = b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+pub const BITCOIN:  &[u8; 58] = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+pub const RIPPLE:   &[u8; 58] = b"rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz";
+pub const FLICKR:   &[u8; 58] = b"123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";
+pub const SKYWELL:  &[u8; 58] = b"jpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65rkm8oFqi1tuvAxyz";
 
 mod traits;
-use traits::{Encode, Decode};
+pub use traits::{Encode, Decode};
+use traits::generate_alpha_map;
 
-pub struct BaseX {}
-impl BaseX {
-    pub fn encode(source: &[u8]) -> String {
+pub struct BaseX <'a> {
+    pub alphabet: &'a [u8],
+}
 
-        let base = ALPHABET.len() as u16;
+impl <'a> BaseX <'a> {
+    pub fn new(alphabet: &'a [u8]) -> Self {
+        BaseX {
+            alphabet: alphabet,
+        }
+    }
+}
+
+impl <'a> Encode for BaseX <'a>{
+    type Output = String;
+    fn encode(&self, source: &[u8]) -> String {
+
+        let base = self.alphabet.len() as u16;
 
         let mut digits: Vec<u16> = vec![0u16; 1];
 
@@ -50,7 +59,7 @@ impl BaseX {
         let mut k = 0;
         while source[k] == 0 && k < source.len() - 1 {
 
-            string.push(ALPHABET[0] as char);
+            string.push(self.alphabet[0] as char);
 
             k += 1;
         }
@@ -59,7 +68,7 @@ impl BaseX {
         let mut q: i32 = (digits.len() - 1) as i32;
         while q >= 0 {
 
-            let uu: u8 = ALPHABET[digits[q as usize] as usize];
+            let uu: u8 = self.alphabet[digits[q as usize] as usize];
             let xx = uu as char;
 
             string.push( xx );
@@ -69,13 +78,16 @@ impl BaseX {
 
         string
     }
+}
 
-    pub fn decode(string: String) -> Option<Vec<u8>> {
+impl <'a> Decode for BaseX <'a> {
+    type Output = Option<Vec<u8>>;
+    fn decode(&self, string: String) -> Option<Vec<u8>> {
         if string.len() == 0 { return None; }
 
-        let alphabet_map = BaseX::generate_alpha_map();
-        let base = ALPHABET.len() as u16;
-        let ledger = ALPHABET[0] as char;
+        let alphabet_map = generate_alpha_map(self.alphabet);
+        let base = self.alphabet.len() as u16;
+        let ledger = self.alphabet[0] as char;
 
         let mut bytes: Vec<u8> = vec![];
         let mut i = 0;
@@ -115,23 +127,6 @@ impl BaseX {
 
         Some(bytes)
     }
-
-    //default source ALPHABET.
-    pub fn generate_alpha_map() -> HashMap<char, usize> {
-        let mut map: HashMap<char, usize> = HashMap::new();
-        let lens = ALPHABET.len();
-
-        // pre-compute lookup table
-        let mut i = 0;
-        while i < lens {
-            let x = ALPHABET[i] as char;
-            map.insert(x, i);
-
-            i += 1;
-        }
-
-        map
-    }
 }
 
 #[cfg(test)]
@@ -140,15 +135,15 @@ mod test_set {
 
     #[test]
     fn encode_test() {
-        let src = vec![0, 130, 189, 40];
-        let encoded = BaseX::encode(&src);
+        let src = vec![28, 215, 33, 155];
+        let encoded = BaseX::new(BITCOIN).encode(&src);
         assert_eq!(encoded, "jkuzA".to_string());
     }
 
     #[test]
     fn decode_test() {
         let src = "jkuzA".to_string();
-        let decoded = BaseX::decode(src);
-        assert_eq!(decoded, Some(vec![0, 130, 189, 40]));
+        let decoded = BaseX::new(BITCOIN).decode(src);
+        assert_eq!(decoded, Some(vec![28, 215, 33, 155]));
     }
 }
