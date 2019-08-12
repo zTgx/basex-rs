@@ -1,4 +1,4 @@
-# [basex-rs](https://github.com/zTgx/basex-rs.git)  [![Build Status](https://travis-ci.org/zTgx/basex-rs.svg?branch=master)](https://travis-ci.org/zTgx/basex-rs)
+# [basex-rs](https://github.com/zTgx/basex-rs.git)  [![Build Status](https://travis-ci.org/zTgx/basex-rs.svg?branch=master)](https://travis-ci.org/zTgx/basex-rs) [![crate](https://img.shields.io/crates/v/basex-rs.svg)](https://crates.io/crates/basex-rs)
 
 Base58 implement in [Rust](http://www.rust-lang.org).
 
