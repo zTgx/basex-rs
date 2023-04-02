@@ -1,13 +1,12 @@
 [package]
 name = "basex-rs"
-version = "0.1.1"
-authors = ["zTgx <747674262@qq.com>"]
+version = "0.2.0"
+authors = ["zTgx <beautifularea@gmail.com>"]
 edition = "2018"
 readme = "README.md"
-keywords = [ "base58", "Bitcoin", "ripple"]
+keywords = [ "base58", "Bitcoin"]
 categories = [ "cryptography" ]
 license = "MIT/Apache-2.0"
-exclude = [ "/.travis.yml" ]
 description = "Base58 implementation."
 repository = "https://github.com/zTgx/basex-rs.git"
 

@@ -1,8 +1,0 @@
-language: rust
-sudo: false
-
-rust:
-  - stable
-
-script:
-  - cargo build --verbose --all  

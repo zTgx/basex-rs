@@ -1,65 +1,59 @@
-// pub const ALPHABET: &[u8; 62] = b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-pub const BITCOIN:  &[u8; 58] = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-pub const RIPPLE:   &[u8; 58] = b"rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz";
-pub const FLICKR:   &[u8; 58] = b"123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";
-pub const SKYWELL:  &[u8; 58] = b"jpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65rkm8oFqi1tuvAxyz";
+use std::collections::HashMap;
 
-mod traits;
-pub use traits::{Encode, Decode};
-use traits::generate_alpha_map;
+const LEN: usize = 58;
+pub const ALPHABET_BITCOIN: &[u8; LEN] =
+    b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+pub const ALPHABET_RIPPLE: &[u8; LEN] =
+    b"rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz";
+pub const ALPHABET_FLICKR: &[u8; LEN] =
+    b"123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";
+pub const ALPHABET_SKYWELL: &[u8; LEN] =
+    b"jpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65rkm8oFqi1tuvAxyz";
 
-pub struct BaseX <'a> {
+pub struct BaseX<'a> {
     pub alphabet: &'a [u8],
 }
 
-impl <'a> BaseX <'a> {
-    pub fn new(alphabet: &'a [u8]) -> Self {
-        BaseX {
-            alphabet: alphabet,
-        }
+impl<'a> BaseX<'a> {
+    pub fn with_alphabet(alphabet: &'a [u8]) -> Self {
+        BaseX { alphabet }
     }
-}
 
-impl <'a> Encode for BaseX <'a>{
-    type Output = String;
-    fn encode(&self, source: &[u8]) -> String {
-
+    pub fn to_bs58(&self, input: &[u8]) -> String {
         let base = self.alphabet.len() as u16;
 
         let mut digits: Vec<u16> = vec![0u16; 1];
 
         let mut i = 0;
-        while i < source.len() {
-
+        while i < input.len() {
             let mut j = 0;
-            let mut carry: u16 = source[i] as u16;
+            let mut carry: u16 = input[i] as u16;
 
             let digits_len = digits.len();
             while j < digits_len {
                 carry += digits.as_slice()[j] << 8;
 
-                digits.as_mut_slice()[j] = carry % (base as u16);
+                digits.as_mut_slice()[j] = carry % base;
 
-                carry = (carry / (base as u16)) | 0;
+                carry /= base;
 
                 j += 1;
             }
 
             while carry > 0 {
-                digits.push(carry % (base as u16));
-                carry = (carry / base) | 0;
+                digits.push(carry % base);
+                carry /= base;
             }
 
             i += 1;
         }
 
-        let mut string = "".to_string();
+        let mut output = "".to_string();
 
         // deal with leading zeros
         let mut k = 0;
-        while source[k] == 0 && k < source.len() - 1 {
-
-            string.push(self.alphabet[0] as char);
+        while input[k] == 0 && k < input.len() - 1 {
+            output.push(self.alphabet[0] as char);
 
             k += 1;
         }
@@ -67,49 +61,43 @@ impl <'a> Encode for BaseX <'a>{
         // convert digits to a string
         let mut q: i32 = (digits.len() - 1) as i32;
         while q >= 0 {
-
             let uu: u8 = self.alphabet[digits[q as usize] as usize];
             let xx = uu as char;
 
-            string.push( xx );
+            output.push(xx);
 
             q -= 1;
         }
 
-        string
+        output
     }
-}
 
-impl <'a> Decode for BaseX <'a> {
-    type Output = Option<Vec<u8>>;
-    fn decode(&self, string: String) -> Option<Vec<u8>> {
-        if string.len() == 0 { return None; }
+    pub fn from_bs58(&self, input: &String) -> Option<Vec<u8>> {
+        if input.is_empty() {
+            return None;
+        }
 
-        let alphabet_map = generate_alpha_map(self.alphabet);
+        let alphabet_map = lookup_table(self.alphabet);
         let base = self.alphabet.len() as u16;
         let ledger = self.alphabet[0] as char;
 
         let mut bytes: Vec<u8> = vec![];
         let mut i = 0;
-        while i < string.len() {
-            let c = string.as_str().chars().nth(i).unwrap();
-            let val = alphabet_map.get(&c);
-            if val.is_none() {
-                return None;
-            }
-
+        while i < input.len() {
+            let c = input.as_str().chars().nth(i)?;
+            let val = alphabet_map.get(&c)?;
             let mut j = 0;
-            let mut carry: u16 = *val.unwrap() as u16;
+            let mut carry: u16 = *val as u16;
             while j < bytes.len() {
                 carry += bytes[j] as u16 * base;
-                bytes[j] = (carry as u8) & 0xff;
+                bytes[j] = carry as u8;
                 carry >>= 8;
 
                 j += 1;
             }
 
             while carry > 0 {
-                bytes.push((carry as u8) & 0xff );
+                bytes.push(carry as u8);
                 carry >>= 8;
             }
 
@@ -118,7 +106,7 @@ impl <'a> Decode for BaseX <'a> {
 
         // deal with leading zeros
         let mut k = 0;
-        while string.as_str().chars().nth(k).unwrap() == ledger && k < string.len() - 1 {
+        while input.as_str().chars().nth(k).unwrap() == ledger && k < input.len() - 1 {
             bytes.push(0);
             k += 1;
         }
@@ -129,21 +117,31 @@ impl <'a> Decode for BaseX <'a> {
     }
 }
 
+/// Pre-compute lookup table
+fn lookup_table(alphabet: &[u8]) -> HashMap<char, usize> {
+    let mut map: HashMap<char, usize> = HashMap::new();
+    alphabet.iter().enumerate().for_each(|(idx, key)| {
+        map.insert(*key as char, idx);
+    });
+
+    map
+}
+
 #[cfg(test)]
 mod test_set {
     use super::*;
 
     #[test]
-    fn encode_test() {
+    fn to_bs58_works() {
         let src = vec![28, 215, 33, 155];
-        let encoded = BaseX::new(BITCOIN).encode(&src);
+        let encoded = BaseX::with_alphabet(ALPHABET_BITCOIN).to_bs58(&src);
         assert_eq!(encoded, "jkuzA".to_string());
     }
 
     #[test]
-    fn decode_test() {
+    fn from_bs58_works() {
         let src = "jkuzA".to_string();
-        let decoded = BaseX::new(BITCOIN).decode(src);
+        let decoded = BaseX::with_alphabet(ALPHABET_BITCOIN).from_bs58(&src);
         assert_eq!(decoded, Some(vec![28, 215, 33, 155]));
     }
 }
